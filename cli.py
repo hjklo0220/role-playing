@@ -36,12 +36,18 @@ USER_PROMPT = (
     f"I'm {level_string}, so please use {level_word} words as much as possible. "
     f"Now, start a conversation with the first sentence!"
 )
+RECOMMEND_PROMPT = (
+    f"Can you please provide me an {level_word} example "
+    f"of how to respond to the last sentence "
+    f"in this situation, without providing a translation "
+    f"and any introductory phrases or sentences."
+)
 
 messages = [
     {"role": "system", "content": SYSTEM_PROMPT},
 ]
 
-def get_query(user_query: str) -> str:
+def get_query(user_query: str, skip_save: bool = False) -> str:
     global messages
 
     messages.append({
@@ -55,10 +61,12 @@ def get_query(user_query: str) -> str:
     )
 
     assistant_message = response.choices[0].message
-    messages.append({
-        "role": "assistant",
-        "content": assistant_message.content
-    })
+
+    if skip_save is False:
+        messages.append({
+            "role": "assistant",
+            "content": assistant_message.content
+        })
 
     return assistant_message
 
@@ -85,13 +93,18 @@ def say(message: str, lang: str):
 def main():
     assistant_message = get_query(USER_PROMPT)
     print(f"[gpt] {assistant_message.content}")
+    say(assistant_message.content, "en")
     
     while line:= input("[user]").strip():
-        if line == "!say":
+        if line == "!recommend":
+            recommend_message = get_query(RECOMMEND_PROMPT, skip_save=True)
+            print("recommend: ", recommend_message.content)
+        elif line == "!say":
             say(messages[-1]["content"], "en")
         else:
             response = get_query(line)
             print(f"[gpt] {response.content}")
+            say(response.content, "en")
 
 
 if __name__ == '__main__':
