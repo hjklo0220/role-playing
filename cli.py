@@ -1,7 +1,11 @@
 import os
+from tempfile import NamedTemporaryFile
+from io import BytesIO
 
+from gtts import gTTS
 import openai
 from dotenv import load_dotenv
+import pygame
 
 load_dotenv()
 
@@ -58,13 +62,36 @@ def get_query(user_query: str) -> str:
 
     return assistant_message
 
+def play_file(file_path: str) -> None:
+    pygame.mixer.init()
+    pygame.mixer.music.load(file_path)
+    pygame.mixer.music.play()
+
+    while pygame.mixer.music.get_busy():
+        pass
+
+    pygame.mixer.quit()
+
+
+def say(message: str, lang: str):
+    io = BytesIO()
+
+    gTTS(message, lang=lang).write_to_fp(io)
+
+    with NamedTemporaryFile() as f:
+        f.write(io.getvalue())
+        play_file(f.name)
+
 def main():
     assistant_message = get_query(USER_PROMPT)
     print(f"[gpt] {assistant_message.content}")
     
     while line:= input("[user]").strip():
-        response = get_query(line)
-        print(f"[gpt] {response.content}")
+        if line == "!say":
+            say(messages[-1]["content"], "en")
+        else:
+            response = get_query(line)
+            print(f"[gpt] {response.content}")
 
 
 if __name__ == '__main__':
