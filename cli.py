@@ -64,7 +64,8 @@ def main():
     
     while line:= input("[user]").strip():
         response = get_query(line)
-        print(f"[gpt] {response}")
+        print(f"[gpt] {response.content}")
+
 
 if __name__ == '__main__':
     main()
